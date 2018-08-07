@@ -1,0 +1,94 @@
+#!/bin/bash
+# TBA: work in a hidden virtual screen
+# TBA: notice whether it fails to wake every time after hibernation
+
+
+#if [ "$EUID" -ne 0 ]
+#  then echo "Please run as root for the system to hibernate after shooting and binding in order to save power."
+#  exit
+#fi
+
+
+read -p "Please enter the filename of the final PDF file, in the format BOOK NAME\,\ AUTHOR\,\ YEAR (besure to include escape for spaces, and do not include .pdf): " FN
+
+
+## Find the page number, front matter and main pages combined
+read -p "Enter how many pages there are in the front matter: " NF
+read -p "Enter the number of main pages: " NM
+N=`expr $NF + $NM`
+clear
+
+
+## Read the position of the page-turning button
+echo "The script is going to recognize the location of the page-turning button."
+echo "Please check whether the packate 'xdotool' is installed."
+echo "Please switch the browser to the fullscreen mode, and to the tab to be shot."
+echo "Please close the side panel if there's any."
+echo "Please move the terminal downward in case that the page-turning button is hidden behind."
+echo "To get the mouse location, the screen is going to be turned clockwise for now."
+read -n1 -r -p "Press any key to turn the screen..." key
+xrandr -o right
+clear
+
+echo "Please click on the browser to avoid interference of the upper panel."
+echo "Please zoom the browser and scale the page to make the font size as large as possible."
+echo "Move the mouse to the page-turning button."
+read -n1 -r -p "Press any key to get the mouse location..." key
+read XP YP S WID <<< $(xdotool getmouselocation | tr -d '[A-Za-z]:')
+clear
+
+
+## Shoot the pages
+echo "Turn to the first page of the front matter."
+echo "Scale the page properly, or click 'Fit width'."
+read -n1 -r -p "Press any key to shoot the pages ..." key
+xdotool mousemove $XP $YP
+for n in `seq -f "%04g" 1 $N`
+do 
+  import -window $WID ~/Pictures/page$n.png
+  sleep 3
+  xdotool mousemove $XP $YP click 1
+  sleep $((3+$RANDOM%3)).$(($RANDOM%10))
+done
+xrandr -o normal
+chown erik ~/Pictures/*
+clear
+echo "Shooting finished." > ~/Dropbox/message.txt  # Send a notice.
+#pm-hibernate
+
+
+## Crop the snapshots
+echo "Now the snapshots are going to be cropped to suitable sizes."
+echo "Please go to the Pictures directory" 
+echo "Please move irrelevant photos to other directories."
+read -p "Please enter the page numbers of the landscape pages (counting from the first page of the front matter) while redownloading them: (Edit the new photos if necessary.)" -a LSCP
+clear
+# TBA: Missing tail pages
+# TBA: redownload landscape pages after crop
+echo "Please check the number of snapshot files is correct."
+echo "Please delete unnecessary pages."
+echo "Please find out the adequate position and size of the crop rectangle. You can do this via GIMP."
+echo "Make sure the package \"mogrify\" is installed."
+read -p "Enter the position of the crop rectangle: " XC YC
+read -p "Enter the size of the crop rectangle: " WC HC
+mogrify -crop "$WC"x$HC+$XC+$YC ~/Pictures/*.png
+chown erik ~/Pictures/*
+clear
+
+# TBA: automatic latex, noticing landscape pages, and remove the last \newline
+read -n1 -r -p "It's now going to bind the pages using LaTeX. Before that, remove unwanted pages first. Press any key to continue ..." key
+rm ~/Pictures/asdf.tex
+head --lines=12 ~/Dropbox/BashScripts/shoot/book\ template.tex > ~/Pictures/asdf.tex
+cd ~/Pictures; ls -1 *.png > ~/Pictures/allpages
+awk '{print "\\includegraphics[height=1\\paperheight]{" $0 "}\\\\"}' allpages >> ~/Pictures/asdf.tex
+#awk '{print "\\includegraphics[height=1\\paperheight]{" $0 "}\\\\"} END{print "\b\b\b \n"}' allpages >> ~/Pictures/asdf.tex
+echo -e '\b\b\b   \n' >> ~/Pictures/asdf.tex
+tail --lines=2 ~/Dropbox/BashScripts/shoot/book\ template.tex >> ~/Pictures/asdf.tex
+# TBA: automatic OCR
+chown erik ~/Pictures/*
+# TBA: automatic compression
+# TBA: automatic upload
+
+
+## Finished!
+#rm ~/Pictures/*.png
