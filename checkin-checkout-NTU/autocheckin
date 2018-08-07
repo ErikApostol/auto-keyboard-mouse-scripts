@@ -1,0 +1,53 @@
+#!/bin/bash
+
+# Remember to see if Javascript is enabled
+
+export DISPLAY=:0
+
+
+# Click on the checkin tab; repeat lest the screen is turned down
+xdotool mousemove --screen 0 223 126 # the location of the tab
+xdotool click --repeat 2 --delay 5000 1
+
+# reload the page
+sleep 5s
+xdotool key F5
+
+# click on 'login'
+sleep 5s 
+xdotool mousemove --screen 0 1081 433 
+xdotool click 1
+
+# key in the account name
+sleep 5s 
+xdotool mousemove --screen 0 1076 315
+xdotool click 1
+xdotool type 'erikcheng'
+
+# key in the password
+sleep 5s 
+xdotool mousemove --screen 0 1087 348
+xdotool click 1
+xdotool type 'C57c5052d23c702'
+
+# click on 'login'
+sleep 5s 
+xdotool mousemove --screen 0 1069 380
+xdotool click 1
+
+# click on 'checkin'
+sleep 5s 
+xdotool mousemove --screen 0 1077 673
+xdotool click 1
+
+## close confirmation message
+#sleep 5s
+#xdotool mousemove --screen 0 1077 369
+#xdotool click 1
+#
+## click on 'logout'
+#sleep 5s 
+#xdotool key Next
+#sleep 2s
+#xdotool mousemove --screen 0 1078 889
+#xdotool click 1
